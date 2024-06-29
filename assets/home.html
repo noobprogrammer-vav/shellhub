@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://bootswatch.com/5/lux/bootstrap.rtl.min.css" />
+    <title>Shell-Hub</title>
+</head>
+<body style="width: 100%; background-color: rgb(17, 17, 17);">
+    <div id="preloader" style="display: none;">
+        <div id="loader"></div>
+    </div>
+    <div style="margin-top: 5%;">
+        <h1 style="margin-bottom: 5%; color :rgb(255, 255, 255)" class="text-center border border-light p-3">Shell-Hub</h1>
+        <div class="" style="height: max-content; width: 100%; background-color: rgba(0, 0, 0, 0.592); padding: 2%; margin-bottom: 2%;">
+            <h2 style="color: aliceblue; border-bottom: 2px dashed rgb(165, 203, 235);" class="text-center p-2">Terminal</h2><br />
+            <div class="row">
+                <div style="color: rgb(2, 232, 2); border-right: 1px solid rgb(255, 255, 255);" id="result_output" class="col-sm-6">
+                    <h2 style="color: greenyellow;" class="text-center">Output</h2>
+                </div>
+                <div style="color: rgb(255, 38, 38); border-left: 1px solid rgb(255, 255, 255);" id="error_output" class="col-sm-6">
+                    <h2 style="color: rgb(255, 38, 38);" class="text-center">Error</h2>
+                </div>
+            </div>
+        </div>
+        <form id="my_form" class="row" style="padding-left: 2%; padding-right: 2%; margin-bottom : 5%">
+            <span class="col-sm-10">
+                <input class="form-control border border-success m-2" type="text" name="command" required />
+            </span>
+            <span class="col-sm-2">
+                <button class="btn btn-outline-success m-2" type="submit">Submit</button>  <button class="btn btn-outline-warning" onclick="window.location.reload(true)" type="button">CLS</button>
+                <button type="reset" id="resetbtn" style="display: none;"></button>
+            </span>
+        </form>
+    </div>
+    <script>
+        document.getElementById("my_form").addEventListener("submit", async function(event){
+            var today = new Date()
+            var timestamp_text = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}--${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`
+            event.preventDefault();
+            // preloader here
+            document.getElementById('preloader').style.display = 'flex';
+            try{
+
+                const response = await fetch("http://192.168.1.18:2002/hitshell",{
+                    method : "POST",
+                    headers : {"Content-type" : "application/json"},
+                    body : JSON.stringify({command : event.target.command.value})
+                })
+                const data = await response.json();
+                if(data.output.length > 0){
+                    document.getElementById("result_output").innerHTML += `<p class="text-center"> >--------------------------------< </p><br />`;
+                    document.getElementById("result_output").innerHTML += `<p>${timestamp_text} -> <u>${event.target.command.value}</u> => ${data.output}</p>`;
+                }
+                if(data.error.length > 0){
+                    document.getElementById("error_output").innerHTML += `<p class="text-center"> >--------------------------------< </p><br />`;
+                    document.getElementById("error_output").innerHTML += `<p>${timestamp_text} -> <u>${event.target.command.value}</u> => ${data.error}</p>`;
+                }
+                
+            } catch (error){
+                console.error('Error fetching data:', error);
+            } finally {
+            // preloader here
+                document.getElementById('preloader').style.display = 'none';
+                document.getElementById("resetbtn").click()
+                window.scrollTo({
+                    top : document.documentElement.scrollHeight,
+                    behavior : 'smooth'
+                })
+            }
+
+        })
+    </script>
+    <style>
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            z-index: 9999; /* Ensure it's on top of other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loader {
+            border: 4px solid #50db34 ; /* Light grey border */
+            border-top: 6px solid #f3f3f3; /* Blue border for animation */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.5s linear infinite; /* Rotate animation */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</body>
+</html>
+<!-- 'Content-Type': 'application/x-www-form-urlencoded' -->
